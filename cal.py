@@ -1,10 +1,11 @@
 #! usr/bin/python
-#coding=utf-8
+# coding=utf-8
 import xlrd
 import re
 import datetime
 import codecs
 from ics import Calendar, Event
+
 
 class Course:
     s = ""
@@ -36,12 +37,12 @@ class Course:
             self.weeks = range(2, 16, 2)
         s1=re.findall("\\d.*?-",s_split[2])
         s2=re.findall("-.*?周",s_split[2])
-        if(len(s1) != 0):
+        if(len(s1)!= 0):
             self.weeks = range(int(s1[0][0:len(s1[0])-1]), int(s2[0][1:len(s2[0])-1]))
 
 
-def generate_date(course_tmp):
-    begin_day = datetime.datetime(2017,9,18)
+def generate_date(begin_day, course_tmp):
+
     date_list = []
     for d in course_tmp.weeks:
         date_list.append(begin_day+datetime.timedelta(days=(d-1)*7+course_tmp.weekday-1))
@@ -52,6 +53,11 @@ if __name__ == "__main__":
     cal = Calendar()
     filename = "cal.xls"
     sheet_name = "report"
+    utc = int(input("请输入与utc的时差:\n"))
+    year = int(input("请输入本学期第一天的年份:\n"))
+    month = int(input("请输入本学期第一天的月份:\n"))
+    day = int(input("请输入本学期第一天的日期:\n"))
+    begin_day = datetime.datetime(year, month, day)
     time = [8, 9+5/6, 13.5, 15+1/3, 17+1/12, 19+1/3]
     book = xlrd.open_workbook(filename)
     sheet = book.sheet_by_name(sheet_name)
@@ -67,12 +73,12 @@ if __name__ == "__main__":
                 course.resolve()
                 li.append(course)
     for course in li:
-        generate_date(course)
+        generate_date(begin_day, course)
         event.name = course.name
         event.description = course.teacher + " " + course.type
         event.location = course.site
         for date in course.weeks:
-            event.begin = date+datetime.timedelta(hours=course.time-8)
+            event.begin = date+datetime.timedelta(hours=course.time-utc)
             event.duration = datetime.timedelta(hours=1.5+1/12)
             print(event)
             cal.events.append(event)
